@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCTV Static Client</title>
+    <style>
+      body { background:#0b1220; color:#fff; font-family:Arial, sans-serif; }
+      .container { max-width:1000px; margin:24px auto; }
+      video { width:100%; border-radius:8px; display:block }
+      canvas.overlay{ position:absolute; left:0; top:0; pointer-events:none }
+      .frame-wrap{ position:relative }
+      .controls{ margin-top:8px }
+      .log{ background:#081027; padding:8px; height:260px; overflow:auto; border-radius:6px; font-family:monospace }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>CCTV Static Client (no Node required)</h1>
+      <div class="frame-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay" class="overlay"></canvas>
+      </div>
+      <div class="controls">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+        <span id="status">idle</span>
+      </div>
+
+      <h3>Recent Events</h3>
+      <div id="log" class="log"></div>
+    </div>
+
+    <script>
+    const video = document.getElementById('video')
+    const overlay = document.getElementById('overlay')
+    const ctx = overlay.getContext('2d')
+    const logDiv = document.getElementById('log')
+    let stream = null
+    let running = false
+    let intervalId = null
+
+    async function startCamera(){
+      stream = await navigator.mediaDevices.getUserMedia({video:true})
+      video.srcObject = stream
+      await video.play()
+      overlay.width = video.clientWidth
+      overlay.height = video.clientHeight
+    }
+
+    function log(msg){
+      const el = document.createElement('div')
+      el.textContent = msg
+      logDiv.prepend(el)
+    }
+
+    async function captureAndSend(){
+      const w = video.videoWidth, h = video.videoHeight
+      if(!w || !h) return
+      const off = document.createElement('canvas')
+      off.width = w; off.height = h
+      off.getContext('2d').drawImage(video,0,0,w,h)
+      const blob = await new Promise(r => off.toBlob(r,'image/jpeg',0.7))
+
+      const form = new FormData()
+      form.append('file', blob, 'frame.jpg')
+      try{
+        document.getElementById('status').textContent = 'sending'
+        const res = await fetch('http://localhost:8000/detect?conf=0.35', { method:'POST', body: form })
+        const data = await res.json()
+        drawBoxes(data.boxes, w, h)
+        log(data.log_line)
+        document.getElementById('status').textContent = 'ok'
+      }catch(e){
+        console.error(e)
+        document.getElementById('status').textContent = 'error'
+      }
+    }
+
+    function drawBoxes(boxes, vw, vh){
+      overlay.width = video.clientWidth
+      overlay.height = video.clientHeight
+      const cw = overlay.width, ch = overlay.height
+      ctx.clearRect(0,0,cw,ch)
+      ctx.strokeStyle = '#00FF00'
+      ctx.lineWidth = 2
+      ctx.font = '14px monospace'
+      const xs = cw / vw, ys = ch / vh
+      (boxes||[]).forEach(b => {
+        const x1 = b.x1 * xs, y1 = b.y1 * ys, x2 = b.x2 * xs, y2 = b.y2 * ys
+        ctx.strokeRect(x1,y1,x2-x1,y2-y1)
+        ctx.fillStyle = '#00FF00'
+        ctx.fillText(`${b.label} ${Number(b.conf).toFixed(2)}`, x1+4, y1+14)
+      })
+    }
+
+    document.getElementById('startBtn').addEventListener('click', async ()=>{
+      if(!stream) await startCamera()
+      running = true
+      intervalId = setInterval(captureAndSend, 800)
+    })
+    document.getElementById('stopBtn').addEventListener('click', ()=>{
+      running = false
+      clearInterval(intervalId)
+      document.getElementById('status').textContent = 'stopped'
+    })
+    </script>
+  </body>
+</html>

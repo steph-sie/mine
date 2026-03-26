@@ -21,7 +21,7 @@ OPENAI_API_KEY = "sk-proj-mjo41wBYWDbJKHKJHKJHSGgaco3zR1INwRPpdRm78m3b1Ea7nO7lz-
 
 @dataclass
 class AppConfig:
-    VIDEO_PATH: str = "1.mp4"
+    VIDEO_PATH: str = "test2.mp4"
     OUTPUT_DIR: str = "detections"
     LOG_FILE: str = "security_log.txt"
     MODEL_NAME: str = "yolov8s.pt"

@@ -1,0 +1,8 @@
+streamlit
+ultralytics
+opencv-python
+torch
+Pillow
+fastapi
+uvicorn
+python-multipart
