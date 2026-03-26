@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment
+.env
+.venv/
+env/
+venv/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Project artifacts
+detections/
+security_log.txt
+yolov8s.pt
+*.pt
+
+# Claude / OMC
+.claude/
+.omc/
+
+# Uploaded temp files
+_uploaded_video

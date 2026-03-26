@@ -1,0 +1,12 @@
+# BoT-SORT tracker config — optimized for CCTV demo
+tracker_type: botsort
+track_high_thresh: 0.25
+track_low_thresh: 0.1
+new_track_thresh: 0.25
+track_buffer: 60        # Keep lost tracks alive longer (60 frames ~ 6s at 10fps)
+match_thresh: 0.75
+fuse_score: True
+gmc_method: sparseOptFlow  # Motion compensation for camera jitter
+proximity_thresh: 0.5
+appearance_thresh: 0.8
+with_reid: False         # We handle Re-ID ourselves in entity_registry.py
